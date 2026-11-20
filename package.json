@@ -1,0 +1,9 @@
+{
+  "name": "concrete-kings",
+  "version": "1.0.0",
+  "description": "Concrete Kings: first-person 1v1 boxing. Static page plus a small WebSocket room relay.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "ws": "^8.18.0" }
+}
