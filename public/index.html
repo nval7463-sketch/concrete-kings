@@ -720,7 +720,7 @@ const PUNCH = {
   hook:  { w: 0.19, d: 0.48, dmg: 9,  st: 16, stun: 0.32, score: 60, reach: 1.32, kb: 1.1 },
   upper: { w: 0.25, d: 0.58, dmg: 12, st: 22, stun: 0.42, score: 90, reach: 1.22, kb: 1.5 },
 };
-const SLIP = { d: 0.42, a0: 0.02, a1: 0.36, cost: 12, cd: 0.22 };
+const SLIP = { d: 0.42, a0: 0.02, a1: 0.36, cost: 12, cd: 0 };   // cd 0: you can slip again the moment a slip ends
 // stamina: punches drain it, it only refills after a short breather, and an empty tank means weak, slow punches
 const STAM = { regen: 11, regenBlock: 5, delay: 0.65, whiff: 5, slow: 0.65, gain: { jab: 5, hook: 9, upper: 13 } };
 const MOVE = { fwd: 1.75, back: 1.45, side: 1.55, ring: 2.42, minDist: 0.72 };
@@ -2830,21 +2830,21 @@ function onHit(e, mine) {
     opp.react(k, e.h, e.kind);
     const away = toMe.clone().multiplyScalar(-1.6).setY(0.7), side = new THREE.Vector3(-toMe.z, 0, toMe.x).multiplyScalar(e.h ? -1.5 : 1.5);
     const myFx = fp.fxId && fp.fxId !== 'none' ? R.FX[fp.fxId] : null;
-    R.burst(hp, { noStar: !!myFx, big: 0.75 + heavy * 0.35 + (crit ? 0.5 : 0) + (e.lunge ? 0.3 : 0), color: crit ? 0xffd36b : 0xffffff, ring: myFx ? myFx.hit[1] : (crit ? 0xffa020 : 0xffe08a), dir: away.add(k === 'hook' ? side : new THREE.Vector3(0, k === 'upper' ? 1.5 : 0, 0)) });
+    R.burst(hp, { noStar: !!myFx, big: 0.75 + heavy * 0.35 + (crit ? (e.kind === 'counter' ? 0.2 : 0.5) : 0) + (e.lunge ? 0.3 : 0), color: crit ? 0xffd36b : 0xffffff, ring: myFx ? myFx.hit[1] : (crit ? 0xffa020 : 0xffe08a), dir: away.add(k === 'hook' ? side : new THREE.Vector3(0, k === 'upper' ? 1.5 : 0, 0)) });
     G.hitstop = [0.05, 0.085, 0.12][heavy] + (crit ? 0.05 : 0) + (e.lunge ? 0.03 : 0);
     shake(0.07 + heavy * 0.08 + (crit ? 0.1 : 0)); cam.fov.hit(-28 - heavy * 16); fp.kick.hit(3); fp.squash(e.h, 10 + heavy * 4);
     SFX.play('smack', { vol: 0.5 + heavy * 0.15, delay: 0.005 });
     dmgNum(hp, '-' + Math.round(e.dmg), crit ? '#ffcf33' : '#fff');
     if (heavy || crit || e.lunge) comicWord(hp, crit);
     if (fp.fxId && fp.fxId !== 'none') {
-      R.fxBurst(hp, fp.fxId, 0.7 + heavy * 0.3 + (crit ? 0.4 : 0));
+      R.fxBurst(hp, fp.fxId, 0.7 + heavy * 0.3 + (crit ? (e.kind === 'counter' ? 0.1 : 0.4) : 0));
       const tf = R.FX[fp.fxId], tier = tf.tier || 0;
-      if (tier >= 3 && (heavy || crit)) { const c = new THREE.Color(tf.halo === 'rainbow' ? 0xff4af0 : tf.halo); vignette(`rgba(${c.r * 255 | 0},${c.g * 255 | 0},${c.b * 255 | 0},.5)`, 0.28 + tier * 0.04, 380); }
+      if (tier >= 3 && (heavy || crit) && e.kind !== 'counter') { const c = new THREE.Color(tf.halo === 'rainbow' ? 0xff4af0 : tf.halo); vignette(`rgba(${c.r * 255 | 0},${c.g * 255 | 0},${c.b * 255 | 0},.5)`, 0.28 + tier * 0.04, 380); }
     }
-    if (heavy === 2 || crit) flash(0.04, 100);
+    if (heavy === 2 || (crit && e.kind !== 'counter')) flash(0.04, 100);
     if (e.lunge) { callout('LUNGE HIT!', '#ffcf33', '56px'); speedLines(0.5, 350); }
     if (e.combo >= 4 && e.combo % 2 === 0) { G.slowmo = 0.3; G.slowTarget = 0.3; vignette('rgba(255,190,40,.6)', 0.6, 500); SFX.play('ooh', { vol: 0.45, crowd: true }); }
-    if (e.kind === 'counter') { callout('COUNTER!', '#ffcf33'); impactFrames(IMPACT_CTR); speedLines(0.55, 400); }
+    if (e.kind === 'counter') { callout('COUNTER!', '#ffcf33'); speedLines(0.2, 300); }
     else if (e.kind === 'break') { callout('GUARD BREAK!', '#ff7a18'); speedLines(0.4, 350); SFX.play('block', { vol: 0.8, rate: 0.7 }); }
     else if (heavy === 2) speedLines(0.3, 300);
     combo(e.combo, e.dmg); if (e.score) cashGain(e.score);
